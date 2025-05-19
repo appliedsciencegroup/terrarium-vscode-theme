@@ -2,7 +2,7 @@
     "name": "terrarium-theme",
     "displayName": "Terrarium Theme",
     "description": "A minimal theme with light and dark variants that focuses on readability, clear error/alert highlighting, and drawing attention to important elements in code and terminal output. Syncs automatically from kelevra repository. Final sync test with added package script.",
-    "version": "0.3.2",
+    "version": "0.3.3",
     "publisher": "appliedsciencegroup",
     "author": {
         "name": "Applied Science Group"
