@@ -39,7 +39,17 @@ jobs:
         run: npm install --package-lock=false --no-package-lock --no-save
           
       - name: Build package
-        run: node build-vsix.js
+        run: |
+          if [ -f "build-vsix.js" ]; then
+            node build-vsix.js
+          elif [ -f "build-vsix.sh" ]; then
+            chmod +x build-vsix.sh
+            ./build-vsix.sh
+          else
+            echo "Building VSIX using vsce"
+            npm install -g @vscode/vsce
+            vsce package
+          fi
           
       - name: Commit changes
         run: |
