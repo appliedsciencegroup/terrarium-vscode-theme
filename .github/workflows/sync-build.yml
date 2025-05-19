@@ -1,0 +1,88 @@
+name: Build and Release VS Code Theme
+
+on:
+  repository_dispatch:
+    types: [sync-theme]
+  workflow_dispatch:
+
+jobs:
+  sync-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout theme repo
+        uses: actions/checkout@v4
+        
+      - name: Fetch latest theme files
+        env:
+          SOURCE_REPO_PAT: ${{ secrets.SOURCE_REPO_PAT }}
+        run: |
+          # Setup credentials for source repo access
+          git config --global user.name "ThemeSync"
+          git config --global user.email "theme-sync@noreply.github.com"
+          
+          # Clone only the specific theme directory from kelevra
+          git clone --depth 1 --filter=blob:none --sparse https://x-access-token:${SOURCE_REPO_PAT}@github.com/appliedsciencegroup/terrarium-kelevra.git temp-source
+          cd temp-source
+          git sparse-checkout set servers/terrarium-theme/vscode
+          cd ..
+          
+          # Sync files (preserve .git directory)
+          rsync -a --exclude='.git/' temp-source/servers/terrarium-theme/vscode/ ./
+          rm -rf temp-source
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - name: Install dependencies
+        run: npm install --package-lock=false --no-package-lock --no-save
+          
+      - name: Build package
+        run: |
+          # Make sure vsce is installed
+          echo "Installing vsce package manager"
+          npm install -g @vscode/vsce
+          
+          # Try different build methods in order of preference
+          if [ -f "build-vsix.js" ]; then
+            echo "Using build-vsix.js script"
+            node build-vsix.js
+          elif [ -f "build-vsix.sh" ]; then
+            echo "Using build-vsix.sh script" 
+            chmod +x build-vsix.sh
+            ./build-vsix.sh
+          elif [ -f "package.json" ] && grep -q "\"scripts\":" package.json && grep -q "\"package\":" package.json; then
+            echo "Using npm script defined in package.json"
+            npm run package
+          else
+            echo "Using direct vsce package command"
+            vsce package
+          fi
+          
+          # List files to debug
+          echo "Files in directory:"
+          ls -la
+          echo "VSIX files:"
+          find . -name "*.vsix"
+          
+      - name: Commit changes
+        run: |
+          git add .
+          git diff --staged --quiet || (git commit -m "Sync theme files from kelevra repo [skip ci]" && git push)
+          
+      - name: Determine version
+        id: get_version
+        run: echo "VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_ENV
+          
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ env.VERSION }}
+          name: Release v${{ env.VERSION }}
+          files: |
+            *.vsix
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
