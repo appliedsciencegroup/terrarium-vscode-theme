@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="32px" height="32px" viewBox="0 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>Terrarium Favion (Light)@1x</title>
+    <g id="Terrarium-Favion-(Light)" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="logo" transform="translate(8, 7.5)" stroke="#000000">
+            <polygon id="Path-2" stroke-linecap="round" stroke-linejoin="round" points="8 3.25600495e-16 15.7575758 4.25 8 8.5 0.242424242 4.25"></polygon>
+            <polyline id="Path-2" stroke-linecap="round" stroke-linejoin="round" points="15.7575758 12.75 8 17 0.242424242 12.75"></polyline>
+            <line x1="15.7575758" y1="4.25" x2="15.7575758" y2="12.75" id="Path-3"></line>
+            <line x1="0.242424242" y1="4.25" x2="0.242424242" y2="12.75" id="Path-4"></line>
+            <line x1="8" y1="8.5" x2="8" y2="17" id="Path-5"></line>
+            <polyline id="Path-6" stroke-linecap="round" stroke-linejoin="round" points="0.242424242 12.75 4.12121212 10.3888889 8 12.75 11.8787879 10.3888889 15.7575758 12.75"></polyline>
+            <polyline id="Path-7" stroke-linecap="round" stroke-linejoin="round" points="4.12121212 10.3888889 4.12121212 6.13888889 8 4.01388889 11.8787879 6.13888889 11.8787879 10.3888889"></polyline>
+            <line x1="8" y1="0" x2="8" y2="4.01388889" id="Path-8"></line>
+        </g>
+    </g>
+</svg>
