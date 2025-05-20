@@ -14,7 +14,7 @@ jobs:
         
       - name: Fetch latest theme files
         env:
-          SOURCE_REPO_PAT: ${{ secrets.SOURCE_REPO_PAT }}
+          SOURCE_REPO_PAT: ${{ secrets.T_REPO_DISPATCH_TOKEN }}
         run: |
           # Setup credentials for source repo access
           git config --global user.name "ThemeSync"
