@@ -11,64 +11,75 @@ jobs:
     steps:
       - name: Checkout theme repo
         uses: actions/checkout@v4
-
+        
       - name: Fetch latest theme files
         env:
-          SOURCE_REPO_PAT: ${{ secrets.T_REPO_DISPATCH_TOKEN }}
+          SOURCE_REPO_PAT: ${{ secrets.SOURCE_REPO_PAT }}
         run: |
           # Setup credentials for source repo access
           git config --global user.name "ThemeSync"
           git config --global user.email "theme-sync@noreply.github.com"
-
+          
           # Clone only the specific theme directory from kelevra
           git clone --depth 1 --filter=blob:none --sparse https://x-access-token:${SOURCE_REPO_PAT}@github.com/appliedsciencegroup/terrarium-kelevra.git temp-source
           cd temp-source
           git sparse-checkout set servers/terrarium-theme/vscode
           cd ..
-
+          
           # Sync files (preserve .git directory)
           rsync -a --exclude='.git/' temp-source/servers/terrarium-theme/vscode/ ./
           rm -rf temp-source
-
+          
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-
+          
       - name: Install dependencies
         run: |
           # Install required packages for building
           npm install --package-lock=false --no-package-lock --no-save
           # Install archiver explicitly (required by manual-create-vsix.js)
           npm install --no-save archiver
-
+          
       - name: Build package
         run: |
-          # Use our manual creation script that properly creates the manifest
+          # Try building with manual-create-vsix.js first
           if [ -f "manual-create-vsix.js" ]; then
             echo "Using manual VSIX creation script with manifest"
             node manual-create-vsix.js
+          # Fall back to other methods if manual script not found
+          elif [ -f "build-vsix.js" ]; then
+            echo "Using build-vsix.js script"
+            node build-vsix.js
+          elif [ -f "build-vsix.sh" ]; then
+            echo "Using build-vsix.sh script" 
+            chmod +x build-vsix.sh
+            ./build-vsix.sh
+          elif [ -f "package.json" ] && grep -q "\"scripts\":" package.json && grep -q "\"package\":" package.json; then
+            echo "Using npm script defined in package.json"
+            npm run package
           else
-            echo "Warning: Manual creation script not found, using fallback"
+            echo "Using direct vsce package command"
             npm install --no-save @vscode/vsce
             npx vsce package
           fi
-
+          
           # List files to debug
           echo "Files in directory:"
           ls -la
           echo "VSIX files:"
           find . -name "*.vsix"
-
+          
       - name: Commit changes
         run: |
           git add .
           git diff --staged --quiet || (git commit -m "Sync theme files from kelevra repo [skip ci]" && git push)
-
+          
       - name: Determine version
         id: get_version
         run: echo "VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_ENV
-
+          
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
