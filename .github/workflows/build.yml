@@ -11,7 +11,7 @@ jobs:
     steps:
       - name: Checkout theme repo
         uses: actions/checkout@v4
-        
+
       - name: Fetch latest theme files
         env:
           SOURCE_REPO_PAT: ${{ secrets.T_REPO_DISPATCH_TOKEN }}
@@ -19,25 +19,29 @@ jobs:
           # Setup credentials for source repo access
           git config --global user.name "ThemeSync"
           git config --global user.email "theme-sync@noreply.github.com"
-          
+
           # Clone only the specific theme directory from kelevra
           git clone --depth 1 --filter=blob:none --sparse https://x-access-token:${SOURCE_REPO_PAT}@github.com/appliedsciencegroup/terrarium-kelevra.git temp-source
           cd temp-source
           git sparse-checkout set servers/terrarium-theme/vscode
           cd ..
-          
+
           # Sync files (preserve .git directory)
           rsync -a --exclude='.git/' temp-source/servers/terrarium-theme/vscode/ ./
           rm -rf temp-source
-          
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          
+
       - name: Install dependencies
-        run: npm install --package-lock=false --no-package-lock --no-save
-          
+        run: |
+          # Install required packages for building
+          npm install --package-lock=false --no-package-lock --no-save
+          # Install archiver explicitly (required by manual-create-vsix.js)
+          npm install --no-save archiver
+
       - name: Build package
         run: |
           # Use our manual creation script that properly creates the manifest
@@ -49,22 +53,22 @@ jobs:
             npm install --no-save @vscode/vsce
             npx vsce package
           fi
-          
+
           # List files to debug
           echo "Files in directory:"
           ls -la
           echo "VSIX files:"
           find . -name "*.vsix"
-          
+
       - name: Commit changes
         run: |
           git add .
           git diff --staged --quiet || (git commit -m "Sync theme files from kelevra repo [skip ci]" && git push)
-          
+
       - name: Determine version
         id: get_version
         run: echo "VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_ENV
-          
+
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
